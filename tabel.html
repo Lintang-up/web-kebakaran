@@ -30,9 +30,26 @@
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         max-width: 800px;
         width: 90%;
-        padding: 20px;
+        padding: 10px;
         text-align: center;
         color: #333;
+        position: relative;
+      }
+
+      .back-arrow {
+        position: absolute;
+        top: 10px;
+        left: 30px;
+        font-size: 25px;
+        text-decoration: none;
+        color: #007bff;
+        display: flex;
+        align-items: center;
+        transition: color 0.3s ease;
+      }
+
+      .back-arrow:hover {
+        color: #6a11cb;
       }
 
       h1 {
@@ -104,6 +121,10 @@
   </head>
   <body>
     <div class="container">
+      <a href="index.html" class="back-arrow">
+        <!-- <svg></svg> -->
+        ←
+      </a>
       <h1>Data Sensor</h1>
       <div>
         <table>
@@ -137,7 +158,6 @@
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcmppY3VlaGpncWNpZHRjc3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNTg1MjAsImV4cCI6MjA0NzgzNDUyMH0.TVZsSG5zYao7XeoEzfJ4nyNIyNvqULFuj8RIWGymhac";
 
         try {
-          // Lakukan fetch data dari Supabase
           const response = await fetch(url, {
             method: "GET",
             headers: {
@@ -151,10 +171,7 @@
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
-          // Simpan data ke dalam variabel allData
           allData = await response.json();
-
-          // Tampilkan halaman pertama
           displayPage(currentPage);
         } catch (error) {
           console.error("Error loading data:", error);
@@ -168,15 +185,11 @@
         const dataToShow = allData.slice(startIndex, endIndex);
 
         const dataTable = document.getElementById("dataTable");
-
-        // Hapus data lama
         dataTable.innerHTML = "";
 
-        // Masukkan data untuk halaman saat ini
         dataToShow.forEach((item) => {
           const row = document.createElement("tr");
 
-          // Ubah waktu ke GMT+7
           const originalTime = new Date(item.time);
           const localTime = new Date(
             originalTime.getTime() + 7 * 60 * 60 * 1000
@@ -192,13 +205,12 @@
           dataTable.appendChild(row);
         });
 
-        // Perbarui kontrol navigasi halaman
         updatePagination();
       }
 
       function updatePagination() {
         const paginationContainer = document.getElementById("pagination");
-        paginationContainer.innerHTML = ""; // Bersihkan kontrol navigasi lama
+        paginationContainer.innerHTML = "";
 
         const totalPages = Math.ceil(allData.length / rowsPerPage);
 
@@ -214,10 +226,7 @@
         }
       }
 
-      // Panggil loadData setiap 3 detik dan tampilkan halaman saat ini
       setInterval(loadData, 3000);
-
-      // Muat data pertama kali
       loadData();
     </script>
   </body>
