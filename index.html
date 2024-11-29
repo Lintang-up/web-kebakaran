@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="https://cdn-icons-png.flaticon.com/512/18273/18273012.png"
+    />
+    <title>Dashboard Monitoring Kebakaran</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #007bff, #6a11cb);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        color: white;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .dashboard {
+        margin-top: 2%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        width: 100%;
+        max-width: 1200px;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        position: relative;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .card i {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: white;
+      }
+
+      .card h2 {
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+      }
+
+      .card .value {
+        font-size: 3rem;
+        font-weight: bold;
+        color: white;
+      }
+
+      .card .status {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 5px 15px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
+      .status {
+        display: inline-block;
+        margin-bottom: 15px;
+        padding: 5px 15px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
+      .chart-container {
+        grid-column: span 2;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      canvas {
+        max-width: 100%;
+      }
+
+      @media (max-width: 768px) {
+        .chart-container {
+          grid-column: span 1;
+        }
+      }
+
+      .status-waktu {
+        display: inline-block;
+        margin-bottom: 15px;
+        padding: 5px 15px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        position: absolute;
+        top: 20%; /* Sesuaikan nilai untuk penempatan */
+        right: 5.5%; /* Sesuaikan nilai untuk penempatan */
+        z-index: 10;
+        font-size: 0.9rem; /* Sesuaikan ukuran teks */
+        border-radius: 5px;
+      }
+
+      /* Lokasi */
+      .location-info {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* Jarak antara ikon dan teks */
+        text-align: left; /* Rata kiri */
+        justify-content: flex-start;
+      }
+
+      .location-info i {
+        color: white;
+        font-size: 1.5rem;
+      }
+
+      #locationName {
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+
+      #LocLat,
+      #LocLong {
+        color: white;
+        font-size: 1rem;
+        text-align: left; /* Rata kiri untuk koordinat */
+      }
+      #botName {
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+
+      #botToken,
+      #botChatId {
+        color: white;
+        font-size: 1rem;
+        text-align: left; /* Rata kiri untuk koordinat */
+      }
+
+      .card .value {
+        text-align: center; /* Tetap rata tengah */
+        color: white;
+        font-size: 1.4rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+
+      /* BUTTON */
+      /* CSS untuk tombol */
+      .button-container {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-around;
+      }
+
+      .button-container .btn {
+        background: linear-gradient(135deg, #6a11cb, #007bff);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .button-container .btn:hover {
+        /* background-color: #45a049; */
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Dashboard Monitoring Kebakaran</h1>
+      <p>Real-time data monitoring system</p>
+    </div>
+
+    <div class="status-waktu" id="statusWaktu">Mengukur...</div>
+
+    <div class="dashboard">
+      <div class="card">
+        <i class="fas fa-home"></i>
+        <h2>Ruang 1</h2>
+        <div class="value" id="ruang1">--</div>
+        <div class="status">Mengukur...</div>
+      </div>
+
+      <div class="card">
+        <i class="fas fa-home"></i>
+        <h2>Ruang 2</h2>
+        <div class="value" id="ruang2">--</div>
+        <div class="status">Mengukur...</div>
+      </div>
+
+      <div class="card">
+        <i class="fas fa-home"></i>
+        <h2>Ruang 3</h2>
+        <div class="value" id="ruang3">--</div>
+        <div class="status">Mengukur...</div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="chart"></canvas>
+      </div>
+
+      <div class="card" id="locationCard">
+        <div class="value">Detail</div>
+        <!-- Nama Tempat -->
+        <div class="location-info">
+          <i class="fas fa-map-marker-alt"></i>
+          <h2 id="locationName">Nama Tempat</h2>
+        </div>
+        <p id="LocLat">Latitude</p>
+        <p id="LocLong">Longitude</p>
+        <br />
+        <!-- Nama Bot -->
+        <div class="location-info">
+          <i class="fab fa-telegram-plane"></i>
+          <h2 id="botName">Nama Bot</h2>
+        </div>
+        <p id="botToken">Token</p>
+        <p id="botChatId">ChatChat</p>
+        <!-- BUTTON -->
+        <div class="button-container">
+          <a href="input-loc.html">
+            <button id="newLocationBtn" class="btn">Lokasi Baru</button>
+          </a>
+          <a href="input-bot_tele.html">
+            <button id="newBotBtn" class="btn">Bot Baru</button>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const ctx = document.getElementById("chart").getContext("2d");
+      let chart;
+
+      //   Chart
+      async function fetchChartData() {
+        try {
+          const response = await fetch(
+            "https://oorjicuehjgqcidtcswo.supabase.co/rest/v1/sensor?select=id,time,f1,f2,f3&order=time.desc&limit=10",
+            {
+              headers: {
+                apikey:
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcmppY3VlaGpncWNpZHRjc3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNTg1MjAsImV4cCI6MjA0NzgzNDUyMH0.TVZsSG5zYao7XeoEzfJ4nyNIyNvqULFuj8RIWGymhac",
+                Authorization:
+                  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcmppY3VlaGpncWNpZHRjc3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNTg1MjAsImV4cCI6MjA0NzgzNDUyMH0.TVZsSG5zYao7XeoEzfJ4nyNIyNvqULFuj8RIWGymhac",
+              },
+            }
+          );
+
+          const data = await response.json();
+          if (data.length === 0) {
+            console.error("Tidak ada data untuk chart");
+            return;
+          }
+
+          // Urutkan data berdasarkan waktu terlama
+          const sortedData = data.reverse();
+
+          // Format data untuk chart
+          const labels = sortedData.map((item) =>
+            new Date(item.time).toLocaleTimeString()
+          );
+
+          const f1Values = sortedData.map((item) => item.f1);
+          const f2Values = sortedData.map((item) => item.f2);
+          const f3Values = sortedData.map((item) => item.f3);
+
+          // Update chart
+          if (chart) {
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = f1Values;
+            chart.data.datasets[1].data = f2Values;
+            chart.data.datasets[2].data = f3Values;
+            chart.update();
+          } else {
+            chart = new Chart(ctx, {
+              type: "line",
+              data: {
+                labels,
+                datasets: [
+                  {
+                    label: "Sensor F1",
+                    data: f1Values,
+                    borderColor: "#e74c3c",
+                    backgroundColor: "rgba(231, 76, 60, 0.2)",
+                    fill: true,
+                  },
+                  {
+                    label: "Sensor F2",
+                    data: f2Values,
+                    borderColor: "#f1c40f",
+                    backgroundColor: "rgba(241, 196, 15, 0.2)",
+                    fill: true,
+                  },
+                  {
+                    label: "Sensor F3",
+                    data: f3Values,
+                    borderColor: "#2ecc71",
+                    backgroundColor: "rgba(46, 204, 113, 0.2)",
+                    fill: true,
+                  },
+                ],
+              },
+
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                      color: "white", // Ubah warna font legend menjadi putih
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    title: {
+                      display: true,
+                      text: "Waktu",
+                      color: "white", // Ubah warna teks sumbu X menjadi putih
+                    },
+                    ticks: {
+                      color: "white", // Ubah warna label sumbu X menjadi putih
+                    },
+                  },
+                  y: {
+                    title: {
+                      display: true,
+                      text: "Status Sensor (0: Aman, 1: Kebakaran)",
+                      color: "white", // Ubah warna teks sumbu Y menjadi putih
+                    },
+                    ticks: {
+                      color: "white", // Ubah warna label sumbu Y menjadi putih
+                    },
+                  },
+                },
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching chart data:", error);
+        }
+      }
+      //   Sensor Terakhir
+      async function fetchLatestSensorData() {
+        try {
+          const response = await fetch(
+            "https://oorjicuehjgqcidtcswo.supabase.co/rest/v1/sensor?select=*&order=time.desc",
+            {
+              headers: {
+                apikey:
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcmppY3VlaGpncWNpZHRjc3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNTg1MjAsImV4cCI6MjA0NzgzNDUyMH0.TVZsSG5zYao7XeoEzfJ4nyNIyNvqULFuj8RIWGymhac",
+                Authorization:
+                  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcmppY3VlaGpncWNpZHRjc3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNTg1MjAsImV4cCI6MjA0NzgzNDUyMH0.TVZsSG5zYao7XeoEzfJ4nyNIyNvqULFuj8RIWGymhac",
+              },
+            }
+          );
+
+          const data = await response.json();
+          if (data.length === 0) {
+            document.getElementById("ruang1").textContent = "Tidak ada data";
+            document.getElementById("ruang2").textContent = "Tidak ada data";
+            document.getElementById("ruang3").textContent = "Tidak ada data";
+            document.getElementById("statusWaktu").textContent = "Waktu: -";
+            return;
+          }
+
+          // Ambil data terbaru
+          const latestSensor = data[0];
+          const sensorF1 = latestSensor.f1 === 1 ? "Kebakaran" : "Aman";
+          const sensorF2 = latestSensor.f2 === 1 ? "Kebakaran" : "Aman";
+          const sensorF3 = latestSensor.f3 === 1 ? "Kebakaran" : "Aman";
+
+          const relayF1 = latestSensor.f1 === 1 ? "Relay ON" : "Relay OFF";
+          const relayF2 = latestSensor.f2 === 1 ? "Relay ON" : "Relay OFF";
+          const relayF3 = latestSensor.f3 === 1 ? "Relay ON" : "Relay OFF";
+
+          //   Time GMT-0 Ke GMT+7
+          const sensorTimeUTC = new Date(latestSensor.time);
+          sensorTimeUTC.setHours(sensorTimeUTC.getHours() + 7);
+          const sensorTime = sensorTimeUTC.toLocaleString();
+
+          // Update data ke kartu masing-masing ruang
+          document.getElementById("ruang1").textContent = sensorF1;
+          document.getElementById("ruang2").textContent = sensorF2;
+          document.getElementById("ruang3").textContent = sensorF3;
+
+          // Update status relay dan warna background untuk status div
+          const ruang1Status = document.querySelectorAll(".status")[0];
+          const ruang2Status = document.querySelectorAll(".status")[1];
+          const ruang3Status = document.querySelectorAll(".status")[2];
+
+          ruang1Status.textContent = relayF1;
+          ruang1Status.style.background =
+            latestSensor.f1 === 1 ? "#e74c3c" : "#2ecc71";
+
+          ruang2Status.textContent = relayF2;
+          ruang2Status.style.background =
+            latestSensor.f2 === 1 ? "#e74c3c" : "#2ecc71";
+
+          ruang3Status.textContent = relayF3;
+          ruang3Status.style.background =
+            latestSensor.f3 === 1 ? "#e74c3c" : "#2ecc71";
+
+          // Update status waktu
+          document.getElementById(
+            "statusWaktu"
+          ).textContent = `Terakhir diperbarui: ${sensorTime}`;
+        } catch (error) {
+          console.error("Error fetching sensor data:", error);
+
+          // Tampilkan pesan error pada kartu dan waktu
+          document.getElementById("ruang1").textContent = "Error";
+          document.getElementById("ruang2").textContent = "Error";
+          document.getElementById("ruang3").textContent = "Error";
+
+          const statusDivs = document.querySelectorAll(".status");
+          statusDivs.forEach((status) => {
+            status.textContent = "Error";
+            status.style.background = "#bdc3c7"; // Default warna error (abu-abu)
+          });
+
+          document.getElementById("statusWaktu").textContent = "Waktu: -";
+        }
+      }
+      //   Lokasi
+      async function fetchLocationData() {
+        try {
+          const response = await fetch(
+            "https://oorjicuehjgqcidtcswo.supabase.co/rest/v1/loc?select=nama,latitude,longitude&order=id.desc&limit=1",
+            {
+              headers: {
+                apikey:
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcmppY3VlaGpncWNpZHRjc3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNTg1MjAsImV4cCI6MjA0NzgzNDUyMH0.TVZsSG5zYao7XeoEzfJ4nyNIyNvqULFuj8RIWGymhac",
+                Authorization:
+                  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcmppY3VlaGpncWNpZHRjc3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNTg1MjAsImV4cCI6MjA0NzgzNDUyMH0.TVZsSG5zYao7XeoEzfJ4nyNIyNvqULFuj8RIWGymhac",
+              },
+            }
+          );
+
+          const data = await response.json();
+          if (data.length === 0) {
+            document.getElementById("locationName").textContent =
+              "Tidak ada data";
+            document.getElementById("locationCoords").textContent = "-";
+            document.getElementById("LocLat").textContent = "-";
+            document.getElementById("LocLong").textContent = "-";
+            return;
+          }
+
+          // Menggunakan data lokasi pertama
+          const location = data[0];
+          const name = location.nama || "Tidak diketahui";
+          const latitude = location.latitude || "-";
+          const longitude = location.longitude || "-";
+
+          // Update konten elemen
+          document.getElementById("locationName").textContent = name;
+          document.getElementById(
+            "LocLat"
+          ).textContent = `Latitude : ${latitude}`;
+          document.getElementById(
+            "LocLong"
+          ).textContent = `Longitude : ${longitude}`;
+        } catch (error) {
+          console.error("Error fetching location data:", error);
+          document.getElementById("locationName").textContent = "Error";
+          document.getElementById("LocLat").textContent = "Error";
+          document.getElementById("LocLong").textContent = "Error";
+        }
+      }
+      //   BOT TELE
+      async function fetchLatestBotData() {
+        try {
+          const response = await fetch(
+            "https://oorjicuehjgqcidtcswo.supabase.co/rest/v1/tele?select=nama_bot,token,chatid&order=id.desc&limit=1",
+            {
+              headers: {
+                apikey:
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcmppY3VlaGpncWNpZHRjc3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNTg1MjAsImV4cCI6MjA0NzgzNDUyMH0.TVZsSG5zYao7XeoEzfJ4nyNIyNvqULFuj8RIWGymhac",
+                Authorization:
+                  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcmppY3VlaGpncWNpZHRjc3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNTg1MjAsImV4cCI6MjA0NzgzNDUyMH0.TVZsSG5zYao7XeoEzfJ4nyNIyNvqULFuj8RIWGymhac",
+              },
+            }
+          );
+
+          const data = await response.json();
+          if (data.length === 0) {
+            document.getElementById("botName").textContent = "Tidak ada data";
+            document.getElementById("botToken").textContent = "Token: -";
+            document.getElementById("botChatId").textContent = "Chat ID: -";
+            return;
+          }
+
+          // Menggunakan data bot terbaru
+          const bot = data[0];
+          const botName = bot.nama_bot || "Tidak diketahui";
+          const botToken = bot.token || "-";
+          const botChatId = bot.chatid || "-";
+
+          // Update konten elemen
+          document.getElementById("botName").textContent = botName;
+          document.getElementById(
+            "botToken"
+          ).textContent = `Token : ${botToken}`;
+          document.getElementById(
+            "botChatId"
+          ).textContent = `Chat ID : ${botChatId}`;
+        } catch (error) {
+          console.error("Error fetching bot data:", error);
+          document.getElementById("botName").textContent = "Error";
+          document.getElementById("botToken").textContent = "Token: -";
+          document.getElementById("botChatId").textContent = "Chat ID: -";
+        }
+      }
+
+      // Panggil fungsi untuk mengambil data bot terbaru
+      fetchLatestBotData();
+      // Panggil fungsi untuk mengambil data lokasi
+      fetchLocationData();
+      // Panggil fungsi untuk memuat Chart
+      fetchChartData();
+      // Panggil fungsi untuk Menampilkan Data sensor paling akhir
+      fetchLatestSensorData();
+
+      //   Refresh Data
+      function refreshSemuaData() {
+        fetchChartData();
+        fetchLatestSensorData();
+        fetchLocationData();
+        fetchLatestBotData();
+      }
+
+      // Panggil fungsi refreshAllData setiap 5 detik
+      setInterval(refreshSemuaData, 5000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="https://cdn-icons-png.flaticon.com/512/18273/18273012.png"
+    />
+    <title>Data Sensor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
+
+      body {
+        font-family: "Poppins", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #007bff, #6a11cb);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        color: #fff;
+      }
+
+      .container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        max-width: 800px;
+        width: 90%;
+        padding: 20px;
+        text-align: center;
+        color: #333;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+
+      table th,
+      table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
+      }
+
+      table th {
+        background-color: #007bff;
+        color: #fff;
+        font-weight: 600;
+      }
+
+      table tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+
+      table tr:hover {
+        background-color: #ddd;
+      }
+
+      a {
+        display: inline-block;
+        margin-top: 20px;
+        font-size: 16px;
+        color: #007bff;
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      a:hover {
+        color: #6a11cb;
+      }
+
+      #pagination button {
+        margin: 0 5px;
+        padding: 5px 10px;
+        border: 1px solid #007bff;
+        background: #fff;
+        color: #007bff;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: background 0.3s, color 0.3s;
+      }
+
+      #pagination button.active {
+        background: #007bff;
+        color: #fff;
+      }
+
+      #pagination button:hover {
+        background: #0056b3;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Data Sensor</h1>
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Waktu</th>
+              <th>Ruang 1</th>
+              <th>Ruang 2</th>
+              <th>Ruang 3</th>
+            </tr>
+          </thead>
+          <tbody id="dataTable"></tbody>
+        </table>
+      </div>
+
+      <div id="pagination" style="margin-top: 20px; text-align: center"></div>
+
+      <a href="input.html">Tambah Data</a>
+    </div>
+
+    <script>
+      let currentPage = 1; // Halaman saat ini
+      const rowsPerPage = 7; // Jumlah baris per halaman
+      let allData = []; // Variabel untuk menyimpan data lengkap
+
+      async function loadData() {
+        const url =
+          "https://oorjicuehjgqcidtcswo.supabase.co/rest/v1/sensor?select=*&order=id.desc";
+        const apiKey =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcmppY3VlaGpncWNpZHRjc3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNTg1MjAsImV4cCI6MjA0NzgzNDUyMH0.TVZsSG5zYao7XeoEzfJ4nyNIyNvqULFuj8RIWGymhac";
+
+        try {
+          // Lakukan fetch data dari Supabase
+          const response = await fetch(url, {
+            method: "GET",
+            headers: {
+              apikey: apiKey,
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          // Simpan data ke dalam variabel allData
+          allData = await response.json();
+
+          // Tampilkan halaman pertama
+          displayPage(currentPage);
+        } catch (error) {
+          console.error("Error loading data:", error);
+          alert("Terjadi kesalahan saat memuat data!");
+        }
+      }
+
+      function displayPage(page) {
+        const startIndex = (page - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const dataToShow = allData.slice(startIndex, endIndex);
+
+        const dataTable = document.getElementById("dataTable");
+
+        // Hapus data lama
+        dataTable.innerHTML = "";
+
+        // Masukkan data untuk halaman saat ini
+        dataToShow.forEach((item) => {
+          const row = document.createElement("tr");
+
+          // Ubah waktu ke GMT+7
+          const originalTime = new Date(item.time);
+          const localTime = new Date(
+            originalTime.getTime() + 7 * 60 * 60 * 1000
+          );
+
+          row.innerHTML = `
+      <td>${item.id || "-"}</td>
+      <td>${localTime.toLocaleString("id-ID") || "-"}</td>
+      <td>${item.f1 || "-"}</td>
+      <td>${item.f2 || "-"}</td>
+      <td>${item.f3 || "-"}</td>
+    `;
+          dataTable.appendChild(row);
+        });
+
+        // Perbarui kontrol navigasi halaman
+        updatePagination();
+      }
+
+      function updatePagination() {
+        const paginationContainer = document.getElementById("pagination");
+        paginationContainer.innerHTML = ""; // Bersihkan kontrol navigasi lama
+
+        const totalPages = Math.ceil(allData.length / rowsPerPage);
+
+        for (let i = 1; i <= totalPages; i++) {
+          const button = document.createElement("button");
+          button.textContent = i;
+          button.className = i === currentPage ? "active" : "";
+          button.onclick = () => {
+            currentPage = i;
+            displayPage(currentPage);
+          };
+          paginationContainer.appendChild(button);
+        }
+      }
+
+      // Panggil loadData setiap 3 detik dan tampilkan halaman saat ini
+      setInterval(loadData, 3000);
+
+      // Muat data pertama kali
+      loadData();
+    </script>
+  </body>
+</html>
